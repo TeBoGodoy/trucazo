@@ -2,7 +2,19 @@ name: Marcaciones Automáticas
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # ✅ Esta es la frecuencia MÁXIMA permitida
+    # ⬇️ Horarios de INVIERNO (UTC-4)
+    - cron: '0 13 * * 1-5'     # 9:00 Chile
+    - cron: '27 22 * * 1-4'    # 18:30 Chile
+    - cron: '0 22 * * 5'       # 18:00 Chile
+    
+    # ⬇️ Horarios de VERANO (UTC-3)
+    - cron: '0 12 * * 1-5'     # 9:00 Chile
+    - cron: '27 21 * * 1-4'    # 18:30 Chile
+    - cron: '0 21 * * 5'       # 18:00 Chile
+    
+    # ⬇️ Respaldo cada 5 minutos
+    - cron: '*/5 * * * *'
+  
   workflow_dispatch:
   push:
     branches: [ main ]
@@ -21,35 +33,7 @@ jobs:
           python-version: '3.12'
       
       - name: 📦 Instalar dependencias
-        run: |
-          pip install --upgrade pip
-          pip install requests pytz
-      
-      # ⬇️ VERIFICAR QUE TODOS LOS SECRETS EXISTEN
-      - name: 🔍 Verificar secrets configurados
-        run: |
-          echo "Verificando variables de entorno..."
-          
-          if [ -n "${{ secrets.URL_API }}" ]; then
-            echo "✅ URL_API configurado correctamente"
-          else
-            echo "❌ URL_API NO configurado"
-            exit 1
-          fi
-          
-          if [ -n "${{ secrets.RUT }}" ]; then
-            echo "✅ RUT configurado correctamente"
-          else
-            echo "❌ RUT NO configurado"
-            exit 1
-          fi
-          
-          if [ -n "${{ secrets.PASSWORD }}" ]; then
-            echo "✅ PASSWORD configurado correctamente"
-          else
-            echo "❌ PASSWORD NO configurado"
-            exit 1
-          fi
+        run: pip install requests pytz
       
       - name: 🚀 Ejecutar marcaciones
         run: python marcaciones.py
@@ -62,6 +46,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: logs-marcaciones-${{ github.run_id }}
+          name: logs-${{ github.run_id }}
           path: marcaciones.log
           retention-days: 7
