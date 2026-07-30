@@ -2,7 +2,7 @@ name: Marcaciones Automáticas
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'  # ✅ Esta es la frecuencia MÁXIMA permitida
   workflow_dispatch:
   push:
     branches: [ main ]
