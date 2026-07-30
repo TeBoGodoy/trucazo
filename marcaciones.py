@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 # Configuración
 URL_API = "https://demo.izytimecontrol.com/api/employee/SendMarkWebV2"
-RUT = os.environ.get('RUT', "17.978.432-7")  # Valor por defecto si no hay secret
-PASSWORD = os.environ.get('PASSWORD', "1111")  # Valor por defecto si no hay secret
+RUT = os.environ.get('RUT', "17.978.432-7")
+PASSWORD = os.environ.get('PASSWORD', "1111")
 MARGEN_MINUTOS = 2  # Margen de 2 minutos para ejecución
 
 HEADERS = {
@@ -87,7 +87,7 @@ def debe_enviar_marcacion():
     ahora = datetime.now()
     dia = ahora.weekday()  # 0=Lunes, 1=Martes, 2=Miércoles, 3=Jueves, 4=Viernes
     hora = ahora.hour
-    minuto = ahora.minuto
+    minuto = ahora.minute  # ✅ CORREGIDO: minute en lugar de minuto
     segundo = ahora.second
     
     logger.info(f"📅 Fecha actual: {ahora.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -107,7 +107,7 @@ def debe_enviar_marcacion():
     
     # VERIFICAR MARCACIÓN DE SALIDA LUNES-JUEVES (18:30)
     # Margen de 2 minutos (18:28 a 18:32)
-    if dia <= 3 and hora == 18 and (MARGEN_MINUTOS - 2) <= minuto <= (MARGEN_MINUTOS + 2):
+    if dia <= 3 and hora == 18 and minuto >= (30 - MARGEN_MINUTOS) and minuto <= (30 + MARGEN_MINUTOS):
         logger.info(f"   ⏰ Hora de marcación: SALIDA LUNES-JUEVES (18:30 PM) - Día {dia}")
         return 0
     
