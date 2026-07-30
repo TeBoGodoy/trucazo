@@ -5,11 +5,11 @@ Ejecuta marcaciones según horario: Lunes-Viernes 9:00, Lunes-Jueves 18:30, Vier
 
 import requests
 import json
-from datetime import datetime, date
+from datetime import datetime
 import os
 import sys
 import logging
-import pytz  # ⬅️ NUEVA DEPENDENCIA
+import pytz
 
 # Configurar logging
 logging.basicConfig(
@@ -22,13 +22,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configuración
-URL_API = "https://demo.izytimecontrol.com/api/employee/SendMarkWebV2"
-RUT = os.environ.get('RUT', "17.978.432-7")
-PASSWORD = os.environ.get('PASSWORD', "1111")
-MARGEN_MINUTOS = 2
+# ⬇️ CONFIGURACIÓN DESDE VARIABLES DE ENTORNO
+URL_API = os.environ.get('URL_API')
+RUT = os.environ.get('RUT')
+PASSWORD = os.environ.get('PASSWORD')
 
-# ⬇️ NUEVO: Configurar zona horaria de Chile
+# ⬇️ VALIDAR QUE TODAS LAS VARIABLES EXISTEN
+variables_requeridas = {
+    'URL_API': URL_API,
+    'RUT': RUT,
+    'PASSWORD': PASSWORD
+}
+
+errores = False
+for var_name, var_value in variables_requeridas.items():
+    if not var_value:
+        logger.error(f"❌ ERROR: Variable de entorno {var_name} no configurada")
+        logger.error(f"   Configúrala en GitHub: Settings → Secrets → {var_name}")
+        errores = True
+
+if errores:
+    sys.exit(1)
+
+MARGEN_MINUTOS = 2
 ZONA_HORARIA = pytz.timezone('America/Santiago')
 
 HEADERS = {
@@ -81,7 +97,6 @@ def enviar_marcacion(tipo_marcacion):
 
 def debe_enviar_marcacion():
     """Determina si debe enviar marcación en este momento (hora Chile)"""
-    # ⬇️ USAR HORA DE CHILE
     ahora = obtener_hora_chile()
     dia = ahora.weekday()
     hora = ahora.hour
@@ -122,11 +137,11 @@ def main():
     logger.info("=" * 60)
     
     logger.info(f"📋 Configuración:")
-    logger.info(f"   RUT: {RUT}")
+    logger.info(f"   URL API: {URL_API}")
+    logger.info(f"   RUT: {RUT[:4]}******-{RUT[-1]}")  # Muestra solo parte del RUT
     logger.info(f"   Password: {'*' * len(PASSWORD)}")
     logger.info(f"   Margen: ±{MARGEN_MINUTOS} minutos")
     logger.info(f"   Zona Horaria: {ZONA_HORARIA}")
-    logger.info(f"   URL: {URL_API}")
     
     tipo_marcacion = debe_enviar_marcacion()
     
