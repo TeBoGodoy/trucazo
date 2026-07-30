@@ -1,6 +1,7 @@
 """
 Script de marcaciones automáticas para GitHub Actions
 Ejecuta marcaciones según horario: Lunes-Viernes 9:00, Lunes-Jueves 18:30, Viernes 18:00
+Siempre usa markType: 4 (como en el ejemplo original)
 """
 
 import requests
@@ -44,6 +45,9 @@ for var_name, var_value in variables_requeridas.items():
 if errores:
     sys.exit(1)
 
+# ⬇️ CONSTANTE: SIEMPRE USA 4
+MARK_TYPE = 4
+
 MARGEN_MINUTOS = 2
 ZONA_HORARIA = pytz.timezone('America/Santiago')
 
@@ -58,20 +62,21 @@ def obtener_hora_chile():
     chile_time = utc_now.astimezone(ZONA_HORARIA)
     return chile_time
 
-def enviar_marcacion(tipo_marcacion):
-    """Envía la marcación a la API"""
+def enviar_marcacion():
+    """Envía la marcación a la API SIEMPRE con markType: 4"""
     data = {
         "body": {
             "rut": RUT,
             "password": PASSWORD,
-            "markType": tipo_marcacion
+            "markType": MARK_TYPE  # Siempre 4
         }
     }
     
     try:
-        logger.info(f"📤 Enviando marcación tipo {tipo_marcacion}")
+        logger.info(f"📤 Enviando marcación con markType: {MARK_TYPE}")
         logger.info(f"   RUT: {RUT}")
         logger.info(f"   URL: {URL_API}")
+        logger.info(f"   Payload: {json.dumps(data, indent=2)}")
         
         response = requests.post(URL_API, json=data, headers=HEADERS, timeout=10)
         
@@ -110,25 +115,25 @@ def debe_enviar_marcacion():
     # Verificar si es fin de semana
     if dia >= 5:
         logger.info("   ⏰ Es fin de semana - No hay marcaciones")
-        return None
+        return False
     
     # Verificar entrada (9:00)
     if hora == 9 and minuto <= MARGEN_MINUTOS:
         logger.info("   ⏰ Hora de marcación: ENTRADA (9:00 AM)")
-        return 4
+        return True
     
     # Verificar salida Lunes-Jueves (18:30)
     if dia <= 3 and hora == 18 and minuto >= (30 - MARGEN_MINUTOS) and minuto <= (30 + MARGEN_MINUTOS):
         logger.info(f"   ⏰ Hora de marcación: SALIDA LUNES-JUEVES (18:30 PM)")
-        return 0
+        return True
     
     # Verificar salida Viernes (18:00)
     if dia == 4 and hora == 18 and minuto <= MARGEN_MINUTOS:
         logger.info("   ⏰ Hora de marcación: SALIDA VIERNES (18:00 PM)")
-        return 0
+        return True
     
     logger.info("   ⏰ No es hora de marcación")
-    return None
+    return False
 
 def main():
     """Función principal"""
@@ -140,14 +145,15 @@ def main():
     logger.info(f"   URL API: {URL_API}")
     logger.info(f"   RUT: {RUT[:4]}******-{RUT[-1]}")  # Muestra solo parte del RUT
     logger.info(f"   Password: {'*' * len(PASSWORD)}")
+    logger.info(f"   MarkType: {MARK_TYPE} (SIEMPRE 4)")
     logger.info(f"   Margen: ±{MARGEN_MINUTOS} minutos")
     logger.info(f"   Zona Horaria: {ZONA_HORARIA}")
     
-    tipo_marcacion = debe_enviar_marcacion()
+    debe_enviar = debe_enviar_marcacion()
     
-    if tipo_marcacion is not None:
+    if debe_enviar:
         logger.info("-" * 40)
-        exito = enviar_marcacion(tipo_marcacion)
+        exito = enviar_marcacion()
         logger.info("-" * 40)
         
         if exito:
