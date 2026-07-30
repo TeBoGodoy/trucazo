@@ -1,4 +1,3 @@
-# .github/workflows/marcaciones.yml
 name: Marcaciones Automáticas
 
 on:
@@ -24,11 +23,38 @@ jobs:
       - name: 📦 Instalar dependencias
         run: |
           pip install --upgrade pip
-          pip install requests pytz  # ⬅️ AGREGAR pytz
+          pip install requests pytz
+      
+      # ⬇️ VERIFICAR QUE TODOS LOS SECRETS EXISTEN
+      - name: 🔍 Verificar secrets configurados
+        run: |
+          echo "Verificando variables de entorno..."
+          
+          if [ -n "${{ secrets.URL_API }}" ]; then
+            echo "✅ URL_API configurado correctamente"
+          else
+            echo "❌ URL_API NO configurado"
+            exit 1
+          fi
+          
+          if [ -n "${{ secrets.RUT }}" ]; then
+            echo "✅ RUT configurado correctamente"
+          else
+            echo "❌ RUT NO configurado"
+            exit 1
+          fi
+          
+          if [ -n "${{ secrets.PASSWORD }}" ]; then
+            echo "✅ PASSWORD configurado correctamente"
+          else
+            echo "❌ PASSWORD NO configurado"
+            exit 1
+          fi
       
       - name: 🚀 Ejecutar marcaciones
         run: python marcaciones.py
         env:
+          URL_API: ${{ secrets.URL_API }}
           RUT: ${{ secrets.RUT }}
           PASSWORD: ${{ secrets.PASSWORD }}
       
